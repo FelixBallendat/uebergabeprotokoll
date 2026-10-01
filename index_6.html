@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wohnungsübergabeprotokoll</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+:root{
+  --paper:#eef1f5;--card:#fff;--ink:#16222e;--ink-soft:#5a6b7b;--line:#ccd5de;
+  --accent:#17485f;--accent-soft:#e3edf2;--ok:#1d6b4f;--ok-soft:#e0f0e8;
+  --flag:#a8401b;--flag-soft:#fae7df;
+  --font-ui:"Source Sans 3",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-doc:"Source Serif 4",ui-serif,Georgia,serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:16px;line-height:1.45;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--line);margin-inline:-16px;padding:10px 16px 8px;
+  display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.bar h1{font-family:var(--font-doc);font-size:16px;font-weight:700;margin:0;flex:1 1 auto;min-width:0}
+.saved{font-size:12px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ok);white-space:nowrap}
+.prog{flex:1 1 100%;height:4px;border-radius:999px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+header.doc{padding-block:20px 6px}
+header.doc .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+header.doc h2{font-family:var(--font-doc);font-size:clamp(24px,7vw,32px);line-height:1.12;margin:.25em 0 .4em;text-wrap:balance}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.meta dt{color:var(--ink-soft)}
+.meta dd{margin:0}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-top:14px;overflow:hidden}
+section>h3{margin:0;font:600 16px/1.3 var(--font-ui);display:flex;gap:10px;align-items:baseline;
+  padding:14px 16px;border-bottom:1px solid var(--line)}
+section>h3 .n{font-family:var(--font-doc);font-size:13px;color:var(--accent);background:var(--accent-soft);
+  border-radius:6px;min-width:24px;text-align:center;padding:2px 5px;font-weight:700}
+.body{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
+.note{font-size:13.5px;color:var(--ink-soft);margin:0}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13.5px;color:var(--ink-soft);font-weight:600;min-width:0}
+input[type=text],input[type=date],input[type=time],textarea,select{
+  font:400 16px/1.4 var(--font-ui);color:var(--ink);background:var(--paper);
+  border:1px solid var(--line);border-radius:8px;padding:10px 11px;width:100%;min-width:0}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{resize:vertical;min-height:64px}
+.row{display:grid;gap:10px}
+.row.two{grid-template-columns:1fr 1fr}
+@media (max-width:460px){.row.two{grid-template-columns:1fr}}
+.item{border:1px solid var(--line);border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:9px}
+.item>.t{font-weight:600;font-size:15px}
+.seg{display:flex;gap:6px}
+.seg label{flex:1;position:relative;margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:flex;align-items:center;justify-content:center;min-height:42px;border:1px solid var(--line);
+  border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink-soft);background:var(--paper)}
+.seg input:checked+span.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.seg input:checked+span.bad{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
+.check{display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.35;cursor:pointer;
+  padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--paper)}
+.check input{width:22px;height:22px;margin:0;flex:none;accent-color:var(--accent)}
+.checks{display:flex;flex-direction:column;gap:8px}
+table.grid{width:100%;border-collapse:collapse;font-size:14px}
+table.grid th{text-align:left;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);
+  font-weight:700;padding:0 6px 6px 0}
+table.grid td{padding:0 6px 8px 0;vertical-align:top}
+table.grid td:last-child,table.grid th:last-child{padding-right:0}
+table.grid input[type=text]{padding:8px 9px;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.camrow{display:flex;flex-direction:column;gap:9px}
+.cambtns{display:flex;gap:8px;flex-wrap:wrap}
+.cam{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:0 15px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  border-radius:9px;font:600 14.5px/1 var(--font-ui);cursor:pointer}
+.cam.alt{background:transparent;border-color:var(--line);color:var(--ink-soft);padding:0 13px}
+.cam svg{width:18px;height:18px;flex:none}
+.thumbs{display:flex;gap:7px;flex-wrap:wrap}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:66px;height:66px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;padding:0;
+  background:rgba(22,34,46,.8);color:#fff;font:700 14px/1 var(--font-ui);cursor:pointer}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.foto{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);display:flex;flex-direction:column}
+.foto img{display:block;width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover}
+.foto .cap{border:0;border-top:1px solid var(--line);border-radius:0;background:var(--card);font-size:13px;padding:8px 9px}
+.foto .fb{display:flex;background:var(--line);gap:1px}
+.foto .fb button{flex:1;min-height:36px;border:0;background:var(--card);color:var(--flag);font:600 12.5px/1 var(--font-ui);cursor:pointer}
+.sig{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:9px}
+.sig .who{font-weight:700;font-size:15px}
+.sig .who small{display:block;font-weight:400;color:var(--ink-soft);font-size:13px}
+.pad{position:relative;border:1px dashed var(--line);border-radius:8px;background:var(--paper);height:140px;touch-action:none}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%}
+.pad .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:13.5px;pointer-events:none}
+.sig img{width:100%;max-height:140px;object-fit:contain;background:var(--paper);border:1px solid var(--line);border-radius:8px}
+.sig .stamp{font-size:13px;color:var(--ok);font-weight:600}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button.b{min-height:46px;padding:0 18px;border-radius:9px;font:600 15px/1 var(--font-ui);cursor:pointer;
+  border:1px solid var(--accent);background:var(--accent);color:#fff}
+button.b.ghost{background:transparent;color:var(--accent)}
+button.b.big{flex:1 1 100%;min-height:54px;font-size:17px}
+button.b:disabled{opacity:.45;cursor:default}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;padding:11px 13px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+footer.fin{margin-top:22px;font-size:13px;color:var(--ink-soft);text-align:center}
+#fallback{display:none}
+#fallback textarea{min-height:200px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <h1>Übergabeprotokoll</h1>
+    <span class="saved" id="saved">gespeichert</span>
+    <span class="prog"><i id="prog"></i></span>
+  </div>
+
+  <header class="doc">
+    <div class="eyebrow">Mieterwechsel</div>
+    <h2>Wohnungsübergabe&shy;protokoll</h2>
+    <p class="note" style="margin-top:12px">Alles wird automatisch auf diesem Handy gespeichert. Am Ende auf <strong>„Protokoll senden"</strong> tippen.</p>
+    <p id="nosave" hidden style="margin-top:10px;border-left:3px solid var(--flag);background:var(--flag-soft);
+      border-radius:0 8px 8px 0;padding:11px 13px;font-size:14px;font-weight:600">Achtung: Dieser Browser speichert nichts
+      automatisch. Bitte den Tab bis zum Absenden offen lassen und die Seite nicht neu laden.</p>
+  </header>
+
+  <section>
+    <h3><span class="n">1</span> Wohnung und Beteiligte</h3>
+    <div class="body">
+      <label class="f">Wohnung (Adresse, Lage, Größe)<input type="text" data-f="objekt" placeholder="Straße Nr., Wohnung, PLZ Ort"></label>
+      <label class="f">Vermieter<input type="text" data-f="vermieter" placeholder="Vor- und Nachname"></label>
+      <div class="row two">
+        <label class="f">Bisherige Mieterin / bisheriger Mieter<input type="text" data-f="n_alt" placeholder="Name"></label>
+        <label class="f">Mietende<input type="date" data-f="d_alt"></label>
+      </div>
+      <div class="row two">
+        <label class="f">Neue Mieterin / neuer Mieter<input type="text" data-f="n_neu" placeholder="Name"></label>
+        <label class="f">Mietbeginn<input type="date" data-f="d_neu"></label>
+      </div>
+      <div class="row two">
+        <label class="f">Datum der Übergabe<input type="date" data-f="datum"></label>
+        <label class="f">Uhrzeit<input type="time" data-f="beginn"></label>
+      </div>
+      <label class="f">Wer ist in der Wohnung?<input type="text" data-f="vorort" placeholder="Namen"></label>
+      <label class="check"><input type="checkbox" data-f="p_felix"><span>Vermieter ist per Video zugeschaltet</span></label>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">2</span> Zählerstände</h3>
+    <div class="body">
+      <p class="note">Stand eintragen und den Zähler direkt mit dem Kamera-Button fotografieren.</p>
+      <div id="zaehler" style="display:flex;flex-direction:column;gap:10px"></div>
+      <p class="note">Falls der Messdienstleister zusätzlich eine offizielle Zwischenablesung macht, bitte hier trotzdem eintragen.</p>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">3</span> Schlüssel</h3>
+    <div class="body">
+      <div id="schluessel" style="display:flex;flex-direction:column;gap:10px"></div>
+      <label class="f">Bemerkung zur Schlüsselübergabe<input type="text" data-f="schl_bem" placeholder="optional"></label>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">4</span> Zustand der Wohnung</h3>
+    <div class="body" id="zustand">
+      <p class="note">Pro Position „in Ordnung" oder „Mangel" wählen. Bei einem Mangel kurz beschreiben und fotografieren.</p>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">5</span> Renovierungszustand</h3>
+    <div class="body">
+      <div class="checks" id="reno"></div>
+      <label class="f">Noch auszuführende Arbeiten<textarea data-f="reno_text" placeholder="z. B. Wand im Wohnraum überstreichen bis …"></textarea></label>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">6</span> Mängel und Nacharbeiten</h3>
+    <div class="body">
+      <div id="maengel" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="btns"><button type="button" class="b ghost" id="addMangel">+ Weitere Position</button></div>
+      <p class="note">Nicht aufgeführte, bei der Begehung erkennbare Mängel gelten als nicht vorhanden. Später auftretende oder verdeckte Mängel bleiben unberührt.</p>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">7</span> Weitere Fotos</h3>
+    <div class="body">
+      <p class="note">Für alles, was zu keiner Position oben gehört: Räume im Überblick, Briefkasten, Spind.</p>
+      <div id="freiCam"></div>
+      <p class="note" id="fotoStatus" hidden></p>
+      <div id="fotos" class="fotos"></div>
+      <p class="note" id="fotoEmpty">Noch keine weiteren Fotos.</p>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">8</span> Kontakt- und Bankdaten</h3>
+    <div class="body">
+      <p class="note" style="font-weight:700;color:var(--ink)">Bisherige Mieterin / bisheriger Mieter — für Kaution und Nebenkostenabrechnung</p>
+      <label class="f">Neue Anschrift<input type="text" data-f="hl_adr" placeholder="Straße, PLZ, Ort"></label>
+      <div class="row two">
+        <label class="f">E-Mail<input type="text" data-f="hl_mail" inputmode="email"></label>
+        <label class="f">Telefon<input type="text" data-f="hl_tel" inputmode="tel"></label>
+      </div>
+      <label class="f">IBAN für die Kautionsrückzahlung<input type="text" data-f="hl_iban" placeholder="DE.."></label>
+      <p class="note" style="font-weight:700;color:var(--ink);margin-top:4px">Neue Mieterin / neuer Mieter</p>
+      <div class="row two">
+        <label class="f">E-Mail<input type="text" data-f="am_mail" inputmode="email"></label>
+        <label class="f">Telefon<input type="text" data-f="am_tel" inputmode="tel"></label>
+      </div>
+      <label class="f">IBAN, von der die Miete kommt<input type="text" data-f="am_iban" placeholder="AT.."></label>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">9</span> Im Termin erledigt</h3>
+    <div class="body"><div class="checks" id="erledigt"></div></div>
+  </section>
+
+  <section>
+    <h3><span class="n">10</span> Unterschriften</h3>
+    <div class="body">
+      <p class="note">Beide hier auf dem Handy mit dem Finger unterschreiben. Der Vermieter unterschreibt auf dem Ausdruck.</p>
+      <div id="sigs" style="display:flex;flex-direction:column;gap:12px"></div>
+      <label class="f">Ort<input type="text" data-f="ort" placeholder="Ort"></label>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="n">11</span> Fertig</h3>
+    <div class="body">
+      <div class="callout">Das Protokoll wird als eine einzige Datei mit allen Fotos und Unterschriften verschickt. Der Vermieter druckt sie aus und schickt allen Beteiligten eine Kopie.</div>
+      <div class="btns">
+        <button type="button" class="b big" id="send">Protokoll senden</button>
+        <button type="button" class="b ghost" id="dl">Datei speichern</button>
+        <button type="button" class="b ghost" id="showText">Notfall: als Text kopieren</button>
+      </div>
+      <p class="note" style="margin-top:4px"><button type="button" id="reset"
+        style="background:none;border:0;padding:0;color:var(--flag);font:600 13.5px/1.3 var(--font-ui);cursor:pointer;text-decoration:underline">Alle Eingaben auf diesem Gerät löschen</button></p>
+      <div id="fallback">
+        <p class="note">Text markieren, kopieren und an den Vermieter schicken. Fotos und Unterschriften bitte zusätzlich aus der Galerie senden.</p>
+        <textarea id="fbText" readonly></textarea>
+      </div>
+    </div>
+  </section>
+
+  <footer class="fin">Alle Eingaben bleiben auf diesem Gerät, bis das Protokoll verschickt wird.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var ZAEHLER=[["z_strom","Strom (Wohnung)"],["z_kw","Kaltwasser"],["z_ww","Warmwasser"],["z_hkv1","Heizkostenverteiler Wohnraum"],["z_hkv2","Heizkostenverteiler Bad"]];
+var SCHL=[["s_haus","Haustür-/Generalschlüssel"],["s_wohn","Wohnungstürschlüssel"],["s_brief","Briefkastenschlüssel"],["s_spind","Spindschlüssel (Spindraum)"],["s_sonst","Sonstige"]];
+var ZUSTAND=[["c_waende","Wohnraum — Wände und Decke"],["c_boden","Wohnraum — Boden"],["c_fenster","Wohnraum — Fenster und Verschattung"],["c_kueche","Küche — Einbauküche, Herd, Kühlschrank, Spüle, Dunstabzug"],["c_bad1","Bad — Dusche, WC, Waschbecken, Armaturen"],["c_bad2","Bad — Fliesen, Silikonfugen, Lüftung"],["c_tueren","Innentüren und Wohnungseingangstür"],["c_balkon","Balkon und Balkontür"],["c_heiz","Heizkörper"],["c_elektro","Elektroinstallation und Rauchwarnmelder"],["c_raeum","Wohnung besenrein und vollständig geräumt"],["c_spind","Spind im Spindraum"]];
+var RENO=[["r_ok","Nicht renovierungsbedürftig — wird so übergeben"],["r_frisch","Renoviert bzw. frisch gestrichen"],["r_offen","Abweichender Zustand, Arbeiten noch offen"]];
+var ERLEDIGT=[["e_mv","Neuer Mietvertrag besprochen und unterschrieben"],["e_ausk","Auskunft nach § 556g BGB vor der Unterschrift erhalten"],["e_auf","Mietaufhebungsvertrag unterschrieben"],["e_kaut","Kaution: Zahlungsweise vereinbart"],["e_haus","Hausordnung ausgehändigt"],["e_wgb","Wohnungsgeberbestätigung zugesagt"],["e_aus","Auszugsbestätigung zugesagt"],["e_dauer","Alter Dauerauftrag gelöscht, neuer eingerichtet"]];
+var ROLES=[["alt","n_alt","bisherige Mieterin / bisheriger Mieter"],["neu","n_neu","neue Mieterin / neuer Mieter"]];
+var MROWS=3;
+var $=function(s,r){return (r||document).querySelector(s)};
+function el(t,c,x){var n=document.createElement(t); if(c)n.className=c; if(x!=null)n.textContent=x; return n}
+
+/* ---------- camera control ---------- */
+var CAMSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.8 8.6A1.6 1.6 0 0 1 5.4 7h2.1l1.1-2h6.8l1.1 2h2.1a1.6 1.6 0 0 1 1.6 1.6v8.8a1.6 1.6 0 0 1-1.6 1.6H5.4a1.6 1.6 0 0 1-1.6-1.6z"/><circle cx="12" cy="13" r="3.3"/></svg>';
+var GALSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.8"/><circle cx="9" cy="10" r="1.6"/><path d="M4 16.2l4.3-3.7 3.2 2.7 3-2.6 5.2 4.3"/></svg>';
+var camSeq=0;
+function camRow(slot,label,text){
+  var wrap=el("div","camrow");
+  var btns=el("div","cambtns");
+  var n=++camSeq;
+
+  var idC="cam_"+slot+"_"+n;
+  var labC=document.createElement("label"); labC.className="cam"; labC.setAttribute("for",idC);
+  labC.innerHTML=CAMSVG; labC.appendChild(document.createTextNode(text||"Foto aufnehmen"));
+  var inC=document.createElement("input");
+  inC.type="file"; inC.accept="image/*"; inC.setAttribute("capture","environment"); inC.id=idC; inC.hidden=true;
+  inC.addEventListener("change",function(e){addFiles(e.target.files,label,slot); e.target.value=""});
+
+  var idG="gal_"+slot+"_"+n;
+  var labG=document.createElement("label"); labG.className="cam alt"; labG.setAttribute("for",idG);
+  labG.innerHTML=GALSVG; labG.appendChild(document.createTextNode("Galerie"));
+  var inG=document.createElement("input");
+  inG.type="file"; inG.accept="image/*"; inG.multiple=true; inG.id=idG; inG.hidden=true;
+  inG.addEventListener("change",function(e){addFiles(e.target.files,label,slot); e.target.value=""});
+
+  btns.appendChild(labC); btns.appendChild(inC); btns.appendChild(labG); btns.appendChild(inG);
+  var th=el("div","thumbs"); th.setAttribute("data-slot",slot);
+  wrap.appendChild(btns); wrap.appendChild(th);
+  return wrap;
+}
+
+/* ---------- build ---------- */
+var zw=$("#zaehler");
+ZAEHLER.forEach(function(z){
+  var box=el("div","item"); box.appendChild(el("div","t",z[1]));
+  var row=el("div","row two");
+  var a=el("input"); a.type="text"; a.placeholder="Zählernummer"; a.setAttribute("data-f",z[0]+"_nr");
+  var b=el("input"); b.type="text"; b.inputMode="decimal"; b.placeholder="Stand"; b.setAttribute("data-f",z[0]+"_st");
+  row.appendChild(a); row.appendChild(b); box.appendChild(row);
+  box.appendChild(camRow(z[0],z[1],"Zähler fotografieren"));
+
+  zw.appendChild(box);
+});
+var sb=$("#schluessel");
+SCHL.forEach(function(s){
+  var box=el("div","item"); box.appendChild(el("div","t",s[1]));
+  var row=el("div","row two");
+  var a=el("input"); a.type="text"; a.inputMode="numeric"; a.placeholder="Anzahl zurück"; a.setAttribute("data-f",s[0]+"_zur");
+  var b=el("input"); b.type="text"; b.inputMode="numeric"; b.placeholder="Anzahl übergeben"; b.setAttribute("data-f",s[0]+"_an");
+  row.appendChild(a); row.appendChild(b); box.appendChild(row);
+  sb.appendChild(box);
+});
+var zc=$("#zustand");
+ZUSTAND.forEach(function(c){
+  var box=el("div","item"); box.appendChild(el("div","t",c[1]));
+  var seg=el("div","seg");
+  [["ok","in Ordnung","ok"],["m","Mangel","bad"]].forEach(function(o){
+    var l=el("label"),r=el("input"); r.type="radio"; r.name=c[0]; r.value=o[0]; r.setAttribute("data-f",c[0]);
+    l.appendChild(r); l.appendChild(el("span",o[2],o[1])); seg.appendChild(l);
+  });
+  box.appendChild(seg);
+  var n=el("input"); n.type="text"; n.placeholder="Bemerkung"; n.setAttribute("data-f",c[0]+"_b"); box.appendChild(n);
+  box.appendChild(camRow(c[0],c[1],"Foto"));
+  zc.appendChild(box);
+});
+var rc=$("#reno");
+RENO.forEach(function(r){
+  var l=el("label","check"),i=el("input"); i.type="radio"; i.name="reno"; i.value=r[0]; i.setAttribute("data-f","reno");
+  l.appendChild(i); l.appendChild(el("span",null,r[1])); rc.appendChild(l);
+});
+var mc=$("#maengel");
+function mrow(n){
+  var box=el("div","item"); box.appendChild(el("div","t","Position "+n));
+  var t=el("input"); t.type="text"; t.placeholder="Mangel oder Nacharbeit"; t.setAttribute("data-f","m"+n+"_t"); box.appendChild(t);
+  var row=el("div","row two");
+  var w=el("input"); w.type="text"; w.placeholder="Wer erledigt das?"; w.setAttribute("data-f","m"+n+"_w");
+  var f=el("input"); f.type="text"; f.placeholder="Bis wann?"; f.setAttribute("data-f","m"+n+"_f");
+  row.appendChild(w); row.appendChild(f); box.appendChild(row);
+  box.appendChild(camRow("m"+n,"Mangel "+n,"Foto"));
+  return box;
+}
+for(var i=1;i<=MROWS;i++) mc.appendChild(mrow(i));
+$("#addMangel").addEventListener("click",function(){MROWS++; mc.appendChild(mrow(MROWS)); bindAll()});
+var ec=$("#erledigt");
+ERLEDIGT.forEach(function(e){
+  var l=el("label","check"),i=el("input"); i.type="checkbox"; i.setAttribute("data-f",e[0]);
+  l.appendChild(i); l.appendChild(el("span",null,e[1])); ec.appendChild(l);
+});
+
+/* ---------- state ---------- */
+var LS="uebergabeprotokoll-v2";
+var state={}, sigs={}, photos={};
+try{var raw=localStorage.getItem(LS); if(raw){var o=JSON.parse(raw)||{}; state=o.state||{}; sigs=o.sigs||{}; photos=o.photos||{}}}catch(e){}
+var savedEl=$("#saved"), wiping=false;
+function persist(){
+  if(wiping) return;
+  try{localStorage.setItem(LS,JSON.stringify({state:state,sigs:sigs,photos:photos}));
+    savedEl.textContent="gespeichert"; savedEl.style.color="var(--ok)";
+  }catch(e){savedEl.textContent="Speicher voll"; savedEl.style.color="var(--flag)"}
+}
+function inputs(){return document.querySelectorAll("[data-f]")}
+function applyState(){
+  inputs().forEach(function(n){
+    if(n===document.activeElement) return;
+    var k=n.getAttribute("data-f"), v=state[k];
+    if(n.type==="checkbox") n.checked=!!v;
+    else if(n.type==="radio") n.checked=(v===n.value);
+    else if(v!=null&&n.value!==v) n.value=v;
+  });
+  refreshSigNames();
+  progress();
+}
+function refreshSigNames(){
+  if(typeof pads==="undefined") return;
+  ROLES.forEach(function(r){
+    var p=pads[r[0]]; if(p&&p.nameEl) p.nameEl.textContent=state[r[1]]||("Name fehlt — "+r[2]);
+  });
+}
+function progress(){
+  var total=0,done=0;
+  inputs().forEach(function(n){
+    if(n.type==="radio") return;
+    var k=n.getAttribute("data-f"); total++;
+    if(n.type==="checkbox"){if(state[k])done++} else if(state[k]&&String(state[k]).trim())done++;
+  });
+  ZUSTAND.forEach(function(c){total++; if(state[c[0]])done++});
+  total++; if(state.reno)done++;
+  total+=2; ROLES.forEach(function(r){if(sigs[r[0]])done++});
+  $("#prog").style.width=(total?Math.round(done/total*100):0)+"%";
+}
+var bound=new WeakSet();
+function bindAll(){
+  inputs().forEach(function(n){
+    if(bound.has(n)) return; bound.add(n);
+    var ev=(n.tagName==="SELECT"||n.type==="checkbox"||n.type==="radio"||n.type==="date"||n.type==="time")?"change":"input";
+    n.addEventListener(ev,function(){
+      var k=n.getAttribute("data-f");
+      var v=n.type==="checkbox"?n.checked:(n.type==="radio"?(n.checked?n.value:undefined):n.value);
+      if(v===undefined) return;
+      state[k]=v; persist(); progress();
+      if(k==="n_alt"||k==="n_neu") refreshSigNames();
+    });
+  });
+  applyState();
+}
+
+/* ---------- signatures ---------- */
+var pads={};
+ROLES.forEach(function(r){
+  var box=el("div","sig");
+  var who=el("div","who"); var nm=el("span",null,""); who.appendChild(nm); who.appendChild(el("small",null,r[2])); box.appendChild(who);
+  var pad=el("div","pad"); var cv=el("canvas"); var hint=el("div","hint","Hier mit dem Finger unterschreiben");
+  pad.appendChild(cv); pad.appendChild(hint); box.appendChild(pad);
+  var img=el("img"); img.hidden=true; img.alt="Unterschrift"; box.appendChild(img);
+  var stamp=el("div","stamp"); stamp.hidden=true; box.appendChild(stamp);
+  var btns=el("div","btns");
+  var bs=el("button","b","Unterschrift speichern"); bs.type="button";
+  var bc=el("button","b ghost","Nochmal"); bc.type="button";
+  btns.appendChild(bs); btns.appendChild(bc); box.appendChild(btns);
+  $("#sigs").appendChild(box);
+  var p={role:r,nameEl:nm,pad:pad,cv:cv,hint:hint,img:img,stamp:stamp,save:bs,clear:bc,drawn:false};
+  pads[r[0]]=p; initPad(p);
+  if(sigs[r[0]]) showSig(p,sigs[r[0]].png,sigs[r[0]].at);
+});
+function initPad(p){
+  var ctx=null,drawing=false,last=null;
+  function size(){
+    var rect=p.cv.getBoundingClientRect(); if(!rect.width) return;
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    p.cv.width=Math.round(rect.width*dpr); p.cv.height=Math.round(rect.height*dpr);
+    ctx=p.cv.getContext("2d"); ctx.scale(dpr,dpr);
+    ctx.lineWidth=2.2; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="#16222e";
+  }
+  p.resize=size; requestAnimationFrame(size);
+  function pt(e){var r=p.cv.getBoundingClientRect(); return{x:e.clientX-r.left,y:e.clientY-r.top}}
+  p.pad.addEventListener("pointerdown",function(e){
+    if(!ctx) size(); if(!ctx) return;
+    drawing=true; try{p.pad.setPointerCapture(e.pointerId)}catch(x){}
+    last=pt(e); p.hint.hidden=true; e.preventDefault();
+  });
+  p.pad.addEventListener("pointermove",function(e){
+    if(!drawing||!ctx) return; var n=pt(e);
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(n.x,n.y); ctx.stroke();
+    last=n; p.drawn=true; e.preventDefault();
+  });
+  ["pointerup","pointercancel","pointerleave"].forEach(function(ev){p.pad.addEventListener(ev,function(){drawing=false})});
+  p.clear.addEventListener("click",function(){
+    if(ctx) ctx.clearRect(0,0,p.cv.width,p.cv.height);
+    p.drawn=false; p.hint.hidden=false; p.img.hidden=true; p.stamp.hidden=true; p.pad.hidden=false; p.save.disabled=false;
+    delete sigs[p.role[0]]; persist(); progress();
+  });
+  p.save.addEventListener("click",function(){
+    if(!p.drawn){toast("Bitte zuerst unterschreiben."); return}
+    var png=p.cv.toDataURL("image/png"), at=new Date().toISOString();
+    sigs[p.role[0]]={png:png,at:at,name:state[p.role[1]]||""}; persist(); showSig(p,png,at); progress();
+  });
+  window.addEventListener("resize",function(){clearTimeout(p._t); p._t=setTimeout(function(){if(!sigs[p.role[0]])size()},250)});
+}
+function showSig(p,png,at){
+  p.img.src=png; p.img.hidden=false; p.pad.hidden=true; p.save.disabled=true;
+  var d=new Date(at);
+  p.stamp.textContent="Unterschrieben "+(isNaN(d.getTime())?"":d.toLocaleString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}));
+  p.stamp.hidden=false;
+}
+
+/* ---------- photos ---------- */
+var fotoGrid=$("#fotos"), fotoEmpty=$("#fotoEmpty"), fotoStatus=$("#fotoStatus");
+function shrink(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file), im=new Image();
+    im.onload=function(){
+      var w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,1200/Math.max(w,h));
+      var cw=Math.max(1,Math.round(w*s)),chh=Math.max(1,Math.round(h*s));
+      var c=document.createElement("canvas"); c.width=cw; c.height=chh;
+      c.getContext("2d").drawImage(im,0,0,cw,chh);
+      URL.revokeObjectURL(url);
+      var q=0.7,out=c.toDataURL("image/jpeg",q);
+      while(out.length*0.75>200000&&q>0.35){q-=0.1; out=c.toDataURL("image/jpeg",q)}
+      res(out);
+    };
+    im.onerror=function(){URL.revokeObjectURL(url); rej(new Error("x"))};
+    im.src=url;
+  });
+}
+function renderFotos(){
+  document.querySelectorAll(".thumbs").forEach(function(c){c.textContent=""});
+  fotoGrid.textContent="";
+  var ids=Object.keys(photos).sort(), frei=0;
+  ids.forEach(function(id){
+    var p=photos[id];
+    if(p.slot&&p.slot!=="frei"){
+      var c=document.querySelector('.thumbs[data-slot="'+p.slot+'"]');
+      if(c){
+        var t=el("div","thumb");
+        var im=el("img"); im.src=p.jpg; im.alt=p.label||"Foto"; im.loading="lazy"; t.appendChild(im);
+        var x=el("button",null,"×"); x.type="button"; x.title="Foto löschen";
+        x.addEventListener("click",function(){delete photos[id]; persist(); renderFotos(); progress()});
+        t.appendChild(x); c.appendChild(t);
+        return;
+      }
+    }
+    frei++;
+    var box=el("div","foto");
+    var im2=el("img"); im2.src=p.jpg; im2.alt=p.label||"Foto"; im2.loading="lazy"; box.appendChild(im2);
+    var cap=el("input","cap"); cap.type="text"; cap.placeholder="Was ist das?"; cap.value=p.label||"";
+    cap.addEventListener("change",function(){p.label=cap.value; persist()});
+    box.appendChild(cap);
+    var fb=el("div","fb"), bd=el("button",null,"Löschen"); bd.type="button";
+    bd.addEventListener("click",function(){delete photos[id]; persist(); renderFotos(); progress()});
+    fb.appendChild(bd); box.appendChild(fb); fotoGrid.appendChild(box);
+  });
+  fotoEmpty.hidden=frei>0;
+}
+function addFiles(list,label,slot){
+  var files=Array.prototype.slice.call(list||[]).filter(function(f){return /^image\//.test(f.type)});
+  if(!files.length) return;
+  fotoStatus.hidden=false; fotoStatus.textContent="Verarbeite "+files.length+" Foto(s) …";
+  var i=0;
+  (function next(){
+    if(i>=files.length){fotoStatus.hidden=true; return}
+    shrink(files[i++]).then(function(jpg){
+      photos["f"+Date.now()+Math.random().toString(36).slice(2,6)]=
+        {jpg:jpg,label:label||"",slot:slot||"frei",at:new Date().toISOString()};
+      persist(); renderFotos(); progress();
+    }).catch(function(){toast("Ein Bild ließ sich nicht lesen.")}).then(next);
+  })();
+}
+$("#freiCam").appendChild(camRow("frei","Allgemein","Foto hinzufügen"));
+renderFotos();
+
+/* ---------- export ---------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function val(k,d){var v=state[k]; return (v==null||v==="")?(d||"—"):v}
+function deDate(iso){if(!iso)return "—"; var p=String(iso).split("-"); return p.length===3?p[2]+"."+p[1]+"."+p[0]:iso}
+function buildHTML(){
+  var h=[];
+  h.push('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">');
+  h.push('<title>Wohnungsübergabeprotokoll '+esc(deDate(state.datum))+'</title><style>');
+  h.push('body{font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#16222e;max-width:820px;margin:0 auto;padding:24px 18px}');
+  h.push('h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:26px 0 8px;border-bottom:1px solid #ccd5de;padding-bottom:4px}');
+  h.push('table{width:100%;border-collapse:collapse;margin:6px 0}th,td{text-align:left;border-bottom:1px solid #e3e8ee;padding:6px 8px 6px 0;vertical-align:top}');
+  h.push('th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#5a6b7b}');
+  h.push('.sub{color:#5a6b7b;margin:0 0 14px}.ok{color:#1d6b4f;font-weight:600}.bad{color:#a8401b;font-weight:600}');
+  h.push('.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}');
+  h.push('.g figure{margin:0}.g img{width:100%;border:1px solid #ccd5de;border-radius:6px}.g figcaption{font-size:12px;color:#5a6b7b;padding-top:3px}');
+  h.push('.sg{display:flex;gap:24px;flex-wrap:wrap;margin-top:10px}.sg div{flex:1 1 240px}.sg img{max-width:100%;height:110px;object-fit:contain;display:block;border-bottom:1px solid #16222e}');
+  h.push('.sg b{display:block;margin-top:4px;font-size:13px}.sg small{color:#5a6b7b}');
+  h.push('@media print{body{max-width:none;padding:0}h2{break-after:avoid}figure,.sg div{break-inside:avoid}}');
+  h.push('</style></head><body>');
+  h.push('<h1>Wohnungsübergabeprotokoll</h1>');
+  h.push('<p class="sub">'+esc(val("objekt"))+'</p>');
+  h.push('<table><tr><th>Datum</th><td>'+esc(deDate(state.datum))+', '+esc(val("beginn"))+' Uhr</td></tr>');
+  h.push('<tr><th>Vor Ort</th><td>'+esc(val("vorort"))+'</td></tr>');
+  h.push('<tr><th>Vermieter</th><td>'+esc(val("vermieter"))+(state.p_felix?" (per Video zugeschaltet)":"")+'</td></tr>');
+  h.push('<tr><th>Rückgabe</th><td>'+esc(val("n_alt"))+' — Mietende '+esc(deDate(state.d_alt))+'</td></tr>');
+  h.push('<tr><th>Übernahme</th><td>'+esc(val("n_neu"))+' — Mietbeginn '+esc(deDate(state.d_neu))+'</td></tr></table>');
+
+  h.push('<h2>1. Zählerstände</h2><table><tr><th>Zähler</th><th>Nummer</th><th>Stand</th></tr>');
+  ZAEHLER.forEach(function(z){h.push('<tr><td>'+esc(z[1])+'</td><td>'+esc(val(z[0]+"_nr"))+'</td><td>'+esc(val(z[0]+"_st"))+'</td></tr>')});
+  h.push('</table>');
+
+  h.push('<h2>2. Schlüssel</h2><table><tr><th>Schlüssel</th><th>zurückgegeben</th><th>übergeben</th></tr>');
+  SCHL.forEach(function(s){h.push('<tr><td>'+esc(s[1])+'</td><td>'+esc(val(s[0]+"_zur"))+'</td><td>'+esc(val(s[0]+"_an"))+'</td></tr>')});
+  h.push('</table>');
+  if(state.schl_bem) h.push('<p>Bemerkung: '+esc(state.schl_bem)+'</p>');
+
+  h.push('<h2>3. Zustand der Wohnung</h2><table><tr><th>Position</th><th>Bewertung</th><th>Bemerkung</th></tr>');
+  ZUSTAND.forEach(function(c){
+    var v=state[c[0]];
+    var t=v==="ok"?'<span class="ok">in Ordnung</span>':(v==="m"?'<span class="bad">Mangel</span>':"nicht geprüft");
+    h.push('<tr><td>'+esc(c[1])+'</td><td>'+t+'</td><td>'+esc(state[c[0]+"_b"]||"")+'</td></tr>');
+  });
+  h.push('</table>');
+
+  var rn=RENO.filter(function(r){return state.reno===r[0]})[0];
+  h.push('<h2>4. Renovierungszustand</h2><p>'+esc(rn?rn[1]:"—")+'</p>');
+  if(state.reno_text) h.push('<p>Noch auszuführen: '+esc(state.reno_text)+'</p>');
+
+  var mm=[];
+  for(var i=1;i<=MROWS;i++) if(state["m"+i+"_t"]) mm.push([state["m"+i+"_t"],state["m"+i+"_w"]||"—",state["m"+i+"_f"]||"—"]);
+  h.push('<h2>5. Mängel und Nacharbeiten</h2>');
+  if(mm.length){h.push('<table><tr><th>Mangel / Nacharbeit</th><th>Wer</th><th>Bis wann</th></tr>');
+    mm.forEach(function(m){h.push('<tr><td>'+esc(m[0])+'</td><td>'+esc(m[1])+'</td><td>'+esc(m[2])+'</td></tr>')});
+    h.push('</table>');
+  } else h.push('<p>Keine Mängel oder Nacharbeiten festgehalten.</p>');
+  h.push('<p><small>Nicht aufgeführte, bei der Begehung erkennbare Mängel gelten als nicht vorhanden. Später auftretende oder verdeckte Mängel bleiben unberührt.</small></p>');
+
+  h.push('<h2>6. Kontakt- und Bankdaten</h2><table>');
+  var nA=val("n_alt","Bisherige Mietpartei"), nN=val("n_neu","Neue Mietpartei");
+  h.push('<tr><th>'+esc(nA)+' — Anschrift</th><td>'+esc(val("hl_adr"))+'</td></tr>');
+  h.push('<tr><th>'+esc(nA)+' — Kontakt</th><td>'+esc(val("hl_mail"))+' · '+esc(val("hl_tel"))+'</td></tr>');
+  h.push('<tr><th>'+esc(nA)+' — IBAN</th><td>'+esc(val("hl_iban"))+'</td></tr>');
+  h.push('<tr><th>'+esc(nN)+' — Kontakt</th><td>'+esc(val("am_mail"))+' · '+esc(val("am_tel"))+'</td></tr>');
+  h.push('<tr><th>'+esc(nN)+' — IBAN</th><td>'+esc(val("am_iban"))+'</td></tr></table>');
+
+  h.push('<h2>7. Im Termin erledigt</h2><table>');
+  ERLEDIGT.forEach(function(e){h.push('<tr><td>'+(state[e[0]]?"erledigt":"offen")+'</td><td>'+esc(e[1])+'</td></tr>')});
+  h.push('</table>');
+
+  var ids=Object.keys(photos).sort();
+  h.push('<h2>8. Fotos ('+ids.length+')</h2>');
+  if(ids.length){h.push('<div class="g">');
+    ids.forEach(function(id){h.push('<figure><img src="'+photos[id].jpg+'" alt=""><figcaption>'+esc(photos[id].label||"ohne Beschriftung")+'</figcaption></figure>')});
+    h.push('</div>');
+  } else h.push('<p>Keine Fotos.</p>');
+
+  h.push('<h2>9. Unterschriften</h2>');
+  h.push('<p>Die Beteiligten bestätigen die Richtigkeit und Vollständigkeit der vorstehenden Feststellungen.</p>');
+  h.push('<p>'+esc(val("ort"))+', den '+esc(deDate(state.datum))+'</p><div class="sg">');
+  ROLES.forEach(function(r){
+    var s=sigs[r[0]];
+    h.push('<div>'+(s?'<img src="'+s.png+'" alt="">':'<div style="height:110px;border-bottom:1px solid #16222e"></div>')+
+      '<b>'+esc(val(r[1]))+'</b><small>'+esc(r[2])+(s?' · unterschrieben '+esc(new Date(s.at).toLocaleString("de-DE")):' · nicht unterschrieben')+'</small></div>');
+  });
+  h.push('<div><div style="height:110px;border-bottom:1px solid #16222e"></div><b>'+esc(val("vermieter"))+'</b><small>Vermieter</small></div>');
+  h.push('</div></body></html>');
+  return h.join("");
+}
+function buildText(){
+  var L=[];
+  L.push("WOHNUNGSÜBERGABEPROTOKOLL — "+val("objekt"));
+  L.push(deDate(state.datum)+", "+val("beginn")+" Uhr · vor Ort: "+val("vorort"));
+  L.push("Vermieter: "+val("vermieter")+" | bisher: "+val("n_alt")+" | neu: "+val("n_neu"));
+  L.push("");
+  L.push("ZÄHLER");
+  ZAEHLER.forEach(function(z){L.push("  "+z[1]+": Nr. "+val(z[0]+"_nr")+" / Stand "+val(z[0]+"_st"))});
+  L.push("SCHLÜSSEL");
+  SCHL.forEach(function(s){L.push("  "+s[1]+": zurück "+val(s[0]+"_zur")+" / übergeben "+val(s[0]+"_an"))});
+  L.push("ZUSTAND");
+  ZUSTAND.forEach(function(c){var v=state[c[0]];
+    L.push("  ["+(v==="ok"?"i.O.":v==="m"?"MANGEL":"offen")+"] "+c[1]+(state[c[0]+"_b"]?" — "+state[c[0]+"_b"]:""))});
+  var rn=RENO.filter(function(r){return state.reno===r[0]})[0];
+  L.push("RENOVIERUNG: "+(rn?rn[1]:"—")+(state.reno_text?" | offen: "+state.reno_text:""));
+  L.push("MÄNGEL");
+  for(var i=1;i<=MROWS;i++) if(state["m"+i+"_t"]) L.push("  "+state["m"+i+"_t"]+" — "+(state["m"+i+"_w"]||"?")+", bis "+(state["m"+i+"_f"]||"?"));
+  L.push("HAN LE: "+val("hl_adr")+" | "+val("hl_mail")+" | "+val("hl_tel")+" | IBAN "+val("hl_iban"));
+  L.push("MIHOLCA: "+val("am_mail")+" | "+val("am_tel")+" | IBAN "+val("am_iban"));
+  L.push("ERLEDIGT");
+  ERLEDIGT.forEach(function(e){L.push("  ["+(state[e[0]]?"x":" ")+"] "+e[1])});
+  L.push("FOTOS: "+Object.keys(photos).length);
+  ROLES.forEach(function(r){L.push("UNTERSCHRIFT "+val(r[1])+": "+(sigs[r[0]]?"liegt vor":"FEHLT"))});
+  L.push(val("ort")+", "+deDate(state.datum));
+  return L.join("\n");
+}
+function fileName(){return "Uebergabeprotokoll_"+(state.datum||"ohne-Datum")+".html"}
+function makeFile(){
+  var blob=new Blob([buildHTML()],{type:"text/html"});
+  try{return new File([blob],fileName(),{type:"text/html"})}catch(e){return blob}
+}
+function missing(){
+  var m=[];
+  if(!state.objekt) m.push("Wohnungsadresse");
+  if(!state.n_alt||!state.n_neu) m.push("Namen der Mietparteien");
+  ROLES.forEach(function(r){if(!sigs[r[0]]) m.push("Unterschrift "+r[1])});
+  if(!Object.keys(photos).length) m.push("Fotos");
+  var leer=ZUSTAND.filter(function(c){return !state[c[0]]}).length;
+  if(leer) m.push(leer+" Zustandspositionen");
+  return m;
+}
+$("#send").addEventListener("click",function(){
+  var m=missing();
+  if(m.length&&!$("#send").dataset.warned){
+    $("#send").dataset.warned="1";
+    toast("Es fehlt noch: "+m.join(", ")+". Nochmal tippen zum Senden.");
+    return;
+  }
+  var f=makeFile();
+  if(navigator.share&&navigator.canShare&&f instanceof File&&navigator.canShare({files:[f]})){
+    navigator.share({files:[f],title:"Wohnungsübergabeprotokoll",
+      text:"Wohnungsübergabeprotokoll vom "+deDate(state.datum)})
+      .then(function(){toast("Gesendet.")})
+      .catch(function(err){if(!err||err.name!=="AbortError") download()});
+  } else download();
+});
+function download(){
+  var blob=new Blob([buildHTML()],{type:"text/html"});
+  var url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=fileName(); document.body.appendChild(a); a.click();
+  setTimeout(function(){URL.revokeObjectURL(url); a.remove()},1500);
+  toast("Datei gespeichert — bitte an den Vermieter schicken.");
+}
+$("#dl").addEventListener("click",download);
+$("#showText").addEventListener("click",function(){
+  var f=$("#fallback"); f.style.display="block"; $("#fbText").value=buildText();
+  $("#fbText").focus(); $("#fbText").select();
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(buildText()).then(function(){toast("Text kopiert.")},function(){});
+});
+function toast(m){var t=el("div","toast",m); document.body.appendChild(t); setTimeout(function(){t.remove()},3200)}
+
+/* storage self-test — warn if this browser cannot persist (e.g. Safari on file://) */
+(function(){
+  var ok=false;
+  try{localStorage.setItem(LS+"-t","1"); ok=localStorage.getItem(LS+"-t")==="1"; localStorage.removeItem(LS+"-t")}catch(e){ok=false}
+  if(!ok){
+    $("#nosave").hidden=false;
+    savedEl.textContent="nicht gespeichert"; savedEl.style.color="var(--flag)";
+    window.addEventListener("beforeunload",function(e){e.preventDefault(); e.returnValue=""});
+  }
+})();
+
+var resetArmed=false;
+$("#reset").addEventListener("click",function(){
+  var b=$("#reset");
+  if(!resetArmed){resetArmed=true; b.textContent="Wirklich alles löschen? Nochmal tippen.";
+    setTimeout(function(){resetArmed=false; b.textContent="Alle Eingaben auf diesem Gerät löschen"},6000); return}
+  wiping=true;
+  state={}; sigs={}; photos={};
+  try{localStorage.removeItem(LS)}catch(e){}
+  location.reload();
+});
+
+bindAll();
+window.addEventListener("beforeunload",persist);
+})();
+</script>
+</body>
+</html>
